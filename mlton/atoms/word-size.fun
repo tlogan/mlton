@@ -46,6 +46,7 @@ val word8 = fromBits (Bits.fromInt 8)
 val word16 = fromBits (Bits.fromInt 16)
 val word32 = fromBits (Bits.fromInt 32)
 val word64 = fromBits (Bits.fromInt 64)
+val word128 = fromBits (Bits.fromInt 128)
 
 val allVector = Vector.tabulate (65, fn i =>
                                   if isValidSize i

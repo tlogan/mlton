@@ -397,16 +397,23 @@ structure ObjectType =
                in
                   Bits.> (b, Bits.zero)
                   andalso Bits.isByteAligned b
+                    (* tlq: is this where the arrayptrHeader goes - which is three bytes? *)
+                    (*
+                      array has 3 8-byte header, right; even with 128 bit alignment?
+                      0 8 0 8, so next addr starts at 8 MOD 16, so needs 8-byte padding? 
+                    *)
                end
           | Normal {ty, ...} =>
                let
                   val b = Bits.+ (Type.width ty,
                                   Type.width (Type.objptrHeader ()))
+                                  (* objptrHeader is 1-Byte? *)
                in
                   not (Type.isUnit ty) 
                   andalso (case !Control.align of
                               Control.Align4 => Bits.isWord32Aligned b
-                            | Control.Align8 => Bits.isWord64Aligned b)
+                            | Control.Align8 => Bits.isWord64Aligned b
+                            | Control.Align16 => Bits.isWord128Aligned b)
                end
           | Stack => true
           | Weak to => Option.fold (to, true, fn (t,_) => Type.isObjptr t)
@@ -421,6 +428,7 @@ structure ObjectType =
                      case !Control.align of
                         Control.Align4 => Bytes.fromInt 4
                       | Control.Align8 => Bytes.fromInt 8
+                      | Control.Align16 => Bytes.fromInt 16 
                   val bytesHeader =
                      Bits.toBytes (Control.Target.Size.header ())
                   val bytesCSize =
@@ -732,6 +740,7 @@ fun checkOffset {base, isVector, offset, result} =
          case !Control.align of
             Control.Align4 => Bits.inWord32
           | Control.Align8 => Bits.inWord64
+          | Control.Align16 => Bits.inWord128
 
       val baseBits = width base
       val baseTys = getTys base

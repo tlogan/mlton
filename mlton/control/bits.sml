@@ -42,6 +42,7 @@ local
                val isWord16Aligned: t -> bool
                val isWord32Aligned: t -> bool
                val isWord64Aligned: t -> bool
+               val isWord128Aligned: t -> bool
                val isZero: t -> bool
                val layout: t -> Layout.t
                val max: t * t -> t
@@ -72,6 +73,7 @@ local
                (* val alignWord16: t -> t *)
                val alignWord32: t -> t
                val alignWord64: t -> t
+               val alignWord128: t -> t
                val compare: t * t -> Relation.t
                val equals: t * t -> bool
                val fromInt: int -> t
@@ -80,6 +82,7 @@ local
                (* val inWord16: t *)
                val inWord32: t
                val inWord64: t
+               val inWord128: t
                (* val isAligned: t * {alignment: t} -> bool *)
                val isWord32Aligned: t -> bool
                (* val isWord64Aligned: t -> bool *)
@@ -125,6 +128,7 @@ local
                val inWord16: bits = 16
                val inWord32: bits = 32
                val inWord64: bits = 64
+               val inWord128: bits = 128
 
                fun isAligned (b, {alignment = a}) = 0 = rem (b, a)
                fun isByteAligned b = isAligned (b, {alignment = inByte})
@@ -132,6 +136,7 @@ local
                fun isWord16Aligned b = isAligned (b, {alignment = inWord16})
                fun isWord32Aligned b = isAligned (b, {alignment = inWord32})
                fun isWord64Aligned b = isAligned (b, {alignment = inWord64})
+               fun isWord128Aligned b = isAligned (b, {alignment = inWord128})
 
                fun toBytes b =
                   if isByteAligned b
@@ -169,6 +174,7 @@ local
                (* fun alignWord16 b = align (b, {alignment = inWord16}) *)
                fun alignWord32 b = align (b, {alignment = inWord32})
                fun alignWord64 b = align (b, {alignment = inWord64}) 
+               fun alignWord128 b = align (b, {alignment = inWord128}) (*tlq: does definition of align need to change?*)
            end
       end
 
