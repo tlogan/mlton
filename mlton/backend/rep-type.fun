@@ -397,23 +397,25 @@ structure ObjectType =
                in
                   Bits.> (b, Bits.zero)
                   andalso Bits.isByteAligned b
-                    (* tlq: is this where the arrayptrHeader goes - which is three bytes? *)
-                    (*
-                      array has 3 8-byte header, right; even with 128 bit alignment?
-                      0 8 0 8, so next addr starts at 8 MOD 16, so needs 8-byte padding? 
-                    *)
                end
           | Normal {ty, ...} =>
                let
-                  val b = Bits.+ (Type.width ty,
-                                  Type.width (Type.objptrHeader ()))
-                                  (* objptrHeader is 1-Byte? *)
+                 fun typeBitAdd (t, b) = Bits.+ (Type.width t, b)
+                 val nextNormalStart = List.fold ([ty, Type.objptrHeader ()], Bits.zero, typeBitAdd)
+
+                 val nextArrayStart = List.fold ([
+                    ty,
+                    Type.objptrHeader (),
+                    Type.seqIndex (), 
+                    Type.seqIndex ()
+                  ], Bits.zero, typeBitAdd)
+                    
                in
                   not (Type.isUnit ty) 
                   andalso (case !Control.align of
-                              Control.Align4 => Bits.isWord32Aligned b
-                            | Control.Align8 => Bits.isWord64Aligned b
-                            | Control.Align16 => Bits.isWord128Aligned b)
+                              Control.Align4 => Bits.isWord32Aligned nextNormalStart 
+                            | Control.Align8 => Bits.isWord64Aligned nextNormalStart 
+                            | Control.Align16 => Bits.isWord128Aligned nextNormalStart andalso Bits.isWord128Aligned nextArrayStart)
                end
           | Stack => true
           | Weak to => Option.fold (to, true, fn (t,_) => Type.isObjptr t)
