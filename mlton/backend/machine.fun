@@ -25,7 +25,8 @@ structure RepType = RepType (structure CFunction = CFunction
                              structure Scale = Scale
                              structure WordSize = WordSize
                              structure WordX = WordX
-                             structure WordXVector = WordXVector)
+                             structure WordXVector = WordXVector
+                             structure WordSimdSize = WordSimdSize)
 structure ObjectType = RepType.ObjectType
 
 structure Type = RepType

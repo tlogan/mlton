@@ -20,6 +20,7 @@ structure P = PrimTycons (structure AdmitsEquality = AdmitsEquality
                           structure Kind = Kind
                           structure RealSize = RealSize
                           structure WordSize = WordSize
+                          structure WordSimdSize = WordSimdSize
                           open Id)
 open P
 

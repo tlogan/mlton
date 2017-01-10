@@ -48,11 +48,13 @@ datatype 'a t =
  | CPointer_getObjptr (* ssa to rssa *)
  | CPointer_getReal of RealSize.t (* ssa to rssa *)
  | CPointer_getWord of WordSize.t (* ssa to rssa *)
+ | CPointer_getWordSimd of WordSimdSize.t (* ssa to rssa *)
  | CPointer_lt (* codegen *)
  | CPointer_setCPointer (* ssa to rssa *)
  | CPointer_setObjptr (* ssa to rssa *)
  | CPointer_setReal of RealSize.t (* ssa to rssa *)
  | CPointer_setWord of WordSize.t (* ssa to rssa *)
+ | CPointer_setWordSimd of WordSimdSize.t (* ssa to rssa *)
  | CPointer_sub (* codegen *)
  | CPointer_toWord (* codegen *)
  | Exn_extra (* implement exceptions *)
@@ -189,6 +191,30 @@ datatype 'a t =
  | Word8Array_updateWord of WordSize.t  (* ssa to rssa *)
  | Word8Vector_subWord of WordSize.t  (* ssa to rssa *)
  | Word8Vector_toString (* defunctorize *)
+
+ | WordSimd_add of WordSimdSize.t (* codegen *)
+ | WordSimd_andb of WordSimdSize.t (* codegen *)
+ | WordSimd_equal of WordSimdSize.t (* codegen *)
+ | WordSimd_ge of WordSimdSize.t * {signed: bool} (* codegen *)
+ | WordSimd_gt of WordSimdSize.t * {signed: bool} (* codegen *)
+ | WordSimd_le of WordSimdSize.t * {signed: bool} (* codegen *)
+ | WordSimd_lt of WordSimdSize.t * {signed: bool} (* codegen *)
+ | WordSimd_lshift of WordSimdSize.t (* codegen *)
+ | WordSimd_mul of WordSimdSize.t * {signed: bool} (* codegen *)
+ | WordSimd_neg of WordSimdSize.t (* codegen *)
+ | WordSimd_notb of WordSimdSize.t (* codegen *)
+ | WordSimd_orb of WordSimdSize.t (* codegen *)
+ | WordSimd_quot of WordSimdSize.t * {signed: bool} (* codegen *)
+ | WordSimd_rem of WordSimdSize.t * {signed: bool} (* codegen *)
+ | WordSimd_rol of WordSimdSize.t (* codegen *)
+ | WordSimd_ror of WordSimdSize.t (* codegen *)
+ | WordSimd_rshift of WordSimdSize.t * {signed: bool} (* codegen *)
+ | WordSimd_sub of WordSimdSize.t (* codegen *)  
+ | WordSimd_xorb of WordSimdSize.t (* codegen *)
+
+
+ | WordSimd_fromVector of WordSimdSize.t (* codegen *)
+ | WordSimd_toArray of WordSimdSize.t (* codegen *)
  | World_save (* ssa to rssa *)
 
 fun name p = p
@@ -207,6 +233,18 @@ fun toString (n: 'a t): string =
          concat ["Word8", seq, "_", oper, "Word", WordSize.toString s]
       fun wordS (s: WordSize.t, sg, str: string): string =
          concat [sign sg, WordSize.toString s, "_", str]
+
+      fun wordSimd (s: WordSimdSize.t, str: string): string =
+         concat ["WordSimd", WordSimdSize.toString s, "_", str]
+
+      fun wordSimdS (s: WordSimdSize.t, {signed}, str: string): string =
+         concat [
+           "WordSimd"
+         , if signed then "S" else "U"
+         , WordSimdSize.toString s
+         , "_", str
+         ]
+
       val realC = ("Real", RealSize.toString)
       val wordC = ("Word", WordSize.toString)
       fun wordCS sg = (sign sg, WordSize.toString)
@@ -233,11 +271,13 @@ fun toString (n: 'a t): string =
        | CPointer_getObjptr => "CPointer_getObjptr"
        | CPointer_getReal s => cpointerGet ("Real", RealSize.toString s)
        | CPointer_getWord s => cpointerGet ("Word", WordSize.toString s)
+       | CPointer_getWordSimd s => cpointerGet ("WordSimd", WordSimdSize.toString s)
        | CPointer_lt => "CPointer_lt"
        | CPointer_setCPointer => "CPointer_setCPointer"
        | CPointer_setObjptr => "CPointer_setObjptr"
        | CPointer_setReal s => cpointerSet ("Real", RealSize.toString s)
        | CPointer_setWord s => cpointerSet ("Word", WordSize.toString s)
+       | CPointer_setWordSimd s => cpointerSet ("WordSimd", WordSimdSize.toString s)
        | CPointer_sub => "CPointer_sub"
        | CPointer_toWord => "CPointer_toWord"
        | Exn_extra => "Exn_extra"
@@ -353,6 +393,30 @@ fun toString (n: 'a t): string =
        | Word_subCheck (s, sg) => wordS (s, sg, "subCheck")
        | Word_toIntInf => "Word_toIntInf"
        | Word_xorb s => word (s, "xorb")
+
+       | WordSimd_add s => wordSimd (s, "add")
+       | WordSimd_andb s => wordSimd (s, "andb")
+       | WordSimd_equal s => wordSimd (s, "equal")
+       | WordSimd_ge (s, sg) => wordSimdS (s, sg, "ge")
+       | WordSimd_gt (s, sg) => wordSimdS (s, sg, "gt")
+       | WordSimd_le (s, sg) => wordSimdS (s, sg, "le")
+       | WordSimd_lt (s, sg) => wordSimdS (s, sg, "lt")
+       | WordSimd_lshift s => wordSimd (s, "lshift")
+       | WordSimd_mul (s, sg) => wordSimdS (s, sg, "mul")
+       | WordSimd_neg s => wordSimd (s, "neg")
+       | WordSimd_notb s => wordSimd (s, "notb")
+       | WordSimd_orb s => wordSimd (s, "orb")
+       | WordSimd_quot (s, sg) => wordSimdS (s, sg, "quot")
+       | WordSimd_rem (s, sg) => wordSimdS (s, sg, "rem")
+       | WordSimd_rol s => wordSimd (s, "rol")
+       | WordSimd_ror s => wordSimd (s, "ror")
+       | WordSimd_rshift (s, sg) => wordSimdS (s, sg, "rshift")
+       | WordSimd_sub  s => wordSimd (s, "sub")  
+       | WordSimd_xorb s => wordSimd (s, "xorb")
+
+
+       | WordSimd_fromVector s => wordSimd (s, "fromVector")
+       | WordSimd_toArray s => wordSimd (s, "toArray")
        | World_save => "World_save"
    end
 
@@ -373,11 +437,13 @@ val equals: 'a t * 'a t -> bool =
     | (CPointer_getObjptr, CPointer_getObjptr) => true
     | (CPointer_getReal s, CPointer_getReal s') => RealSize.equals (s, s')
     | (CPointer_getWord s, CPointer_getWord s') => WordSize.equals (s, s')
+    | (CPointer_getWordSimd s, CPointer_getWordSimd s') => WordSimdSize.equals (s, s')
     | (CPointer_lt, CPointer_lt) => true
     | (CPointer_setCPointer, CPointer_setCPointer) => true
     | (CPointer_setObjptr, CPointer_setObjptr) => true
     | (CPointer_setReal s, CPointer_setReal s') => RealSize.equals (s, s')
     | (CPointer_setWord s, CPointer_setWord s') => WordSize.equals (s, s')
+    | (CPointer_setWordSimd s, CPointer_setWordSimd s') => WordSimdSize.equals (s, s')
     | (CPointer_sub, CPointer_sub) => true
     | (CPointer_toWord, CPointer_toWord) => true
     | (Exn_extra, Exn_extra) => true
@@ -516,6 +582,41 @@ val equals: 'a t * 'a t -> bool =
     | (Word8Vector_subWord s, Word8Vector_subWord s') => WordSize.equals (s, s')
     | (Word8Vector_toString, Word8Vector_toString) => true
     | (World_save, World_save) => true
+
+
+
+
+    | (WordSimd_add s, WordSimd_add s') => WordSimdSize.equals (s, s')
+    | (WordSimd_andb s, WordSimd_andb s') => WordSimdSize.equals (s, s')
+    | (WordSimd_equal s, WordSimd_equal s') => WordSimdSize.equals (s, s')
+    | (WordSimd_ge (s, sg), WordSimd_ge (s', sg')) => 
+        WordSimdSize.equals (s, s') andalso sg = sg'
+    | (WordSimd_gt (s, sg), WordSimd_gt (s', sg')) => 
+        WordSimdSize.equals (s, s') andalso sg = sg'
+    | (WordSimd_le (s, sg), WordSimd_le (s', sg')) => 
+        WordSimdSize.equals (s, s') andalso sg = sg'
+    | (WordSimd_lt (s, sg), WordSimd_lt (s', sg')) => 
+        WordSimdSize.equals (s, s') andalso sg = sg'
+    | (WordSimd_lshift s, WordSimd_lshift s') => WordSimdSize.equals (s, s')
+    | (WordSimd_mul (s, sg), WordSimd_mul (s', sg')) => 
+        WordSimdSize.equals (s, s') andalso sg = sg'
+    | (WordSimd_neg s, WordSimd_neg s') => WordSimdSize.equals (s, s')
+    | (WordSimd_notb s, WordSimd_notb s') => WordSimdSize.equals (s, s')
+    | (WordSimd_orb s, WordSimd_orb s') => WordSimdSize.equals (s, s')
+    | (WordSimd_quot (s, sg), WordSimd_quot (s', sg')) => 
+        WordSimdSize.equals (s, s') andalso sg = sg'
+    | (WordSimd_rem (s, sg), WordSimd_rem (s', sg')) => 
+        WordSimdSize.equals (s, s') andalso sg = sg'
+    | (WordSimd_rol s, WordSimd_rol s') => WordSimdSize.equals (s, s')
+    | (WordSimd_ror s, WordSimd_ror s') => WordSimdSize.equals (s, s')
+    | (WordSimd_rshift (s, sg), WordSimd_rshift (s', sg')) => 
+        WordSimdSize.equals (s, s') andalso sg = sg'
+    | (WordSimd_sub s, WordSimd_sub s') => WordSimdSize.equals (s, s')
+    | (WordSimd_xorb s, WordSimd_xorb s') => WordSimdSize.equals (s, s')
+
+
+    | (WordSimd_fromVector s, WordSimd_fromVector s') => WordSimdSize.equals (s, s')
+    | (WordSimd_toArray s, WordSimd_toArray s') => WordSimdSize.equals (s, s')
     | _ => false
 
 val map: 'a t * ('a -> 'b) -> 'b t =
@@ -535,11 +636,13 @@ val map: 'a t * ('a -> 'b) -> 'b t =
     | CPointer_getObjptr => CPointer_getObjptr
     | CPointer_getReal z => CPointer_getReal z
     | CPointer_getWord z => CPointer_getWord z
+    | CPointer_getWordSimd z => CPointer_getWordSimd z
     | CPointer_lt => CPointer_lt
     | CPointer_setCPointer => CPointer_setCPointer
     | CPointer_setObjptr => CPointer_setObjptr
     | CPointer_setReal z => CPointer_setReal z
     | CPointer_setWord z => CPointer_setWord z
+    | CPointer_setWordSimd z => CPointer_setWordSimd z
     | CPointer_sub => CPointer_sub
     | CPointer_toWord => CPointer_toWord
     | Exn_extra => Exn_extra
@@ -658,9 +761,33 @@ val map: 'a t * ('a -> 'b) -> 'b t =
     | Word8Vector_toString => Word8Vector_toString
     | World_save => World_save
 
+    | WordSimd_add z => WordSimd_add z
+    | WordSimd_andb z => WordSimd_andb z
+    | WordSimd_equal z => WordSimd_equal z
+    | WordSimd_ge z => WordSimd_ge z
+    | WordSimd_gt z => WordSimd_gt z
+    | WordSimd_le z => WordSimd_le z
+    | WordSimd_lt z => WordSimd_lt z
+    | WordSimd_lshift z => WordSimd_lshift z
+    | WordSimd_mul z  => WordSimd_mul z
+    | WordSimd_neg z  => WordSimd_neg z
+    | WordSimd_notb z => WordSimd_notb z
+    | WordSimd_orb z  => WordSimd_orb z 
+    | WordSimd_quot z  => WordSimd_quot z
+    | WordSimd_rem z  => WordSimd_rem z
+    | WordSimd_rol z => WordSimd_rol z
+    | WordSimd_ror z => WordSimd_ror z
+    | WordSimd_rshift z => WordSimd_rshift z
+    | WordSimd_sub z  => WordSimd_sub z 
+    | WordSimd_xorb z => WordSimd_xorb z
+
+    | WordSimd_fromVector z => WordSimd_fromVector z
+    | WordSimd_toArray z => WordSimd_toArray z
+
 val cast: 'a t -> 'b t = fn p => map (p, fn _ => Error.bug "Prim.cast")
 
 val array = Array_array
+val arrayToVector = Array_toVector
 val arrayLength = Array_length
 val assign = Ref_assign
 val bogus = MLton_bogus
@@ -684,6 +811,10 @@ fun cpointerGet ctype =
        | Word16 => CPointer_getWord (WordSize.fromBits (Bits.fromInt 16))
        | Word32 => CPointer_getWord (WordSize.fromBits (Bits.fromInt 32))
        | Word64 => CPointer_getWord (WordSize.fromBits (Bits.fromInt 64))
+       | WordSimd8x16 => CPointer_getWordSimd WordSimdSize.wordSimd8x16
+       | WordSimd16x8 => CPointer_getWordSimd WordSimdSize.wordSimd16x8
+       | WordSimd32x4 => CPointer_getWordSimd WordSimdSize.wordSimd32x4
+       | WordSimd64x2 => CPointer_getWordSimd WordSimdSize.wordSimd64x2
    end
 val cpointerLt = CPointer_lt
 fun cpointerSet ctype = 
@@ -702,6 +833,10 @@ fun cpointerSet ctype =
        | Word16 => CPointer_setWord (WordSize.fromBits (Bits.fromInt 16))
        | Word32 => CPointer_setWord (WordSize.fromBits (Bits.fromInt 32))
        | Word64 => CPointer_setWord (WordSize.fromBits (Bits.fromInt 64))
+       | WordSimd8x16 => CPointer_setWordSimd WordSimdSize.wordSimd8x16
+       | WordSimd16x8 => CPointer_setWordSimd WordSimdSize.wordSimd16x8
+       | WordSimd32x4 => CPointer_setWordSimd WordSimdSize.wordSimd32x4
+       | WordSimd64x2 => CPointer_setWordSimd WordSimdSize.wordSimd64x2
    end
 val cpointerSub = CPointer_sub
 val cpointerToWord = CPointer_toWord
@@ -737,6 +872,7 @@ val wordQuot = Word_quot
 val wordRshift = Word_rshift
 val wordSub = Word_sub
 val wordXorb = Word_xorb
+val wordSimdToArray = WordSimd_toArray 
 
 val isCommutative =
    fn MLton_eq => true
@@ -753,6 +889,14 @@ val isCommutative =
     | Word_mulCheck _ => true
     | Word_orb _ => true
     | Word_xorb _ => true
+
+    | WordSimd_add _ => true
+    | WordSimd_andb _ => true
+    | WordSimd_equal _ => true
+    | WordSimd_mul _ => true
+    | WordSimd_orb _ => true
+    | WordSimd_xorb _ => true
+
     | _ => false
 
 val mayOverflow =
@@ -782,11 +926,13 @@ val kind: 'a t -> Kind.t =
        | CPointer_getObjptr => DependsOnState
        | CPointer_getReal _ => DependsOnState
        | CPointer_getWord _ => DependsOnState
+       | CPointer_getWordSimd _ => DependsOnState
        | CPointer_lt => Functional
        | CPointer_setCPointer => SideEffect
        | CPointer_setObjptr => SideEffect
        | CPointer_setReal _ => SideEffect
        | CPointer_setWord _ => SideEffect
+       | CPointer_setWordSimd _ => SideEffect
        | CPointer_sub => Functional
        | CPointer_toWord => Functional
        | Exn_extra => Functional
@@ -905,6 +1051,31 @@ val kind: 'a t -> Kind.t =
        | Word_subCheck _ => SideEffect
        | Word_toIntInf => Functional
        | Word_xorb _ => Functional
+
+
+       | WordSimd_add _ => Functional 
+       | WordSimd_andb _ => Functional
+       | WordSimd_equal _ => Functional
+       | WordSimd_ge _ => Functional
+       | WordSimd_gt _ => Functional
+       | WordSimd_le _ => Functional
+       | WordSimd_lt _ => Functional
+       | WordSimd_lshift _ => Functional
+       | WordSimd_mul _ => Functional
+       | WordSimd_neg _ => Functional
+       | WordSimd_notb _ => Functional
+       | WordSimd_orb _ => Functional
+       | WordSimd_quot _ => Functional
+       | WordSimd_rem _ => Functional
+       | WordSimd_rol _ => Functional
+       | WordSimd_ror _ => Functional
+       | WordSimd_rshift _ => Functional
+       | WordSimd_sub _ => Functional
+       | WordSimd_xorb _ => Functional
+
+       | WordSimd_fromVector _ => Functional 
+       | WordSimd_toArray _ => SideEffect 
+
        | World_save => SideEffect
    end
 
@@ -974,6 +1145,41 @@ local
       [(Word8Array_subWord s),
        (Word8Array_updateWord s),
        (Word8Vector_subWord s)]
+
+
+
+   fun wordSimdSigns (s: WordSimdSize.t, signed: bool) = let
+     val sg = {signed = signed}
+   in
+     List.map ([
+       WordSimd_ge,
+       WordSimd_gt,
+       WordSimd_le,
+       WordSimd_lt,
+       WordSimd_mul,
+       WordSimd_quot,
+       WordSimd_rem,
+       WordSimd_rshift
+     ], fn p => p (s, sg))
+   end
+
+   fun wordSimds (s: WordSimdSize.t) = [
+       (WordSimd_add s),
+       (WordSimd_andb s),
+       (WordSimd_equal s),
+       (WordSimd_lshift s),
+       (WordSimd_neg s),
+       (WordSimd_notb s),
+       (WordSimd_orb s),
+       (WordSimd_rol s),
+       (WordSimd_ror s),
+       (WordSimd_sub s),
+       (WordSimd_xorb s),
+       (WordSimd_fromVector s),
+       (WordSimd_toArray s)
+    ] @ wordSimdSigns (s, true) @ wordSimdSigns (s, false)
+
+
 in
    val all: unit t list =
       [Array_array,
@@ -1052,7 +1258,8 @@ in
        Word8Vector_toString,
        World_save]
       @ List.concat [List.concatMap (RealSize.all, reals),
-                     List.concatMap (WordSize.prims, words)]
+                     List.concatMap (WordSize.prims, words),
+                     List.concatMap (WordSimdSize.all, wordSimds)]
       @ let
            val real = RealSize.all
            val word = WordSize.all
@@ -1083,7 +1290,8 @@ in
              List.concatMap (all, fn s => [get s, set s])
        in
           List.concat [doit (RealSize.all, CPointer_getReal, CPointer_setReal),
-                       doit (WordSize.prims, CPointer_getWord, CPointer_setWord)]
+                       doit (WordSize.prims, CPointer_getWord, CPointer_setWord),
+                       doit (WordSimdSize.all, CPointer_getWordSimd, CPointer_setWordSimd)]
        end
 end
 
@@ -1132,7 +1340,8 @@ fun 'a checkApp (prim: 'a t,
                              unit: 'a,
                              vector: 'a -> 'a,
                              weak: 'a -> 'a,
-                             word: WordSize.t -> 'a}}): bool =
+                             word: WordSize.t -> 'a,
+                             wordSimd: WordSimdSize.t -> 'a}}): bool =
    let
       fun arg i = Vector.sub (args, i)
       fun noArgs () =
@@ -1167,6 +1376,7 @@ fun 'a checkApp (prim: 'a t,
       in
          val realUnary = make real
          val wordUnary = make word
+         val wordSimdUnary = make wordSimd
       end
       local
          fun make f s = let val t = f s
@@ -1175,6 +1385,7 @@ fun 'a checkApp (prim: 'a t,
       in
          val realBinary = make real
          val wordBinary = make word
+         val wordSimdBinary = make wordSimd
       end
       local
          fun make f s = let val t = f s
@@ -1183,6 +1394,7 @@ fun 'a checkApp (prim: 'a t,
       in
          val realCompare = make real
          val wordCompare = make word
+         val wordSimdCompare = make wordSimd
       end
       val cint = word (WordSize.cint ())
       val compareRes = word WordSize.compareRes
@@ -1232,6 +1444,8 @@ fun 'a checkApp (prim: 'a t,
             noTargs (fn () => (twoArgs (cpointer, cptrdiff), real s))
        | CPointer_getWord s =>
             noTargs (fn () => (twoArgs (cpointer, cptrdiff), word s))
+       | CPointer_getWordSimd s =>
+            noTargs (fn () => (twoArgs (cpointer, cptrdiff), wordSimd s))
        | CPointer_lt =>
             noTargs (fn () => (twoArgs (cpointer, cpointer), bool))
        | CPointer_setCPointer =>
@@ -1243,6 +1457,8 @@ fun 'a checkApp (prim: 'a t,
             noTargs (fn () => (threeArgs (cpointer, cptrdiff, real s), unit))
        | CPointer_setWord s =>
             noTargs (fn () => (threeArgs (cpointer, cptrdiff, word s), unit))
+       | CPointer_setWordSimd s =>
+            noTargs (fn () => (threeArgs (cpointer, cptrdiff, wordSimd s), unit))
        | CPointer_sub =>
             noTargs (fn () => (twoArgs (cpointer, cptrdiff), cpointer))
        | CPointer_toWord => noTargs (fn () => (oneArg cpointer, csize))
@@ -1377,6 +1593,31 @@ fun 'a checkApp (prim: 'a t,
        | Word_subCheck (s, _) => wordBinary s
        | Word_toIntInf => noTargs (fn () => (oneArg smallIntInfWord, intInf))
        | Word_xorb s => wordBinary s
+
+       | WordSimd_add s => wordSimdBinary s
+       | WordSimd_andb s => wordSimdBinary s
+       | WordSimd_equal s => wordSimdBinary s
+       | WordSimd_ge (s, _) => wordSimdBinary s
+       | WordSimd_gt (s, _) => wordSimdBinary s
+       | WordSimd_le (s, _) => wordSimdBinary s
+       | WordSimd_lt (s, _) => wordSimdBinary s
+       | WordSimd_lshift s => wordSimdBinary s
+       | WordSimd_mul (s, _) => wordSimdBinary s
+       | WordSimd_neg s => wordSimdUnary s
+       | WordSimd_notb s => wordSimdUnary s
+       | WordSimd_orb s => wordSimdBinary s
+       | WordSimd_quot (s, _) => wordSimdBinary s
+       | WordSimd_rem (s, _) => wordSimdBinary s
+       | WordSimd_rol s => wordSimdBinary s  
+       | WordSimd_ror s => wordSimdBinary s  
+       | WordSimd_rshift (s, _) => wordSimdBinary s  
+       | WordSimd_sub s => wordSimdBinary s  
+       | WordSimd_xorb s => wordSimdBinary s
+
+       | WordSimd_fromVector s =>
+          noTargs (fn () => (oneArg (vector (word (WordSimdSize.word s))), wordSimd s))
+       | WordSimd_toArray s =>
+          noTargs (fn () => (twoArgs (wordSimd s, array (word (WordSimdSize.word s))), unit))
        | World_save => noTargs (fn () => (oneArg string, unit))
    end
 
@@ -1573,6 +1814,7 @@ fun ('a, 'b) apply (p: 'a t,
       val eq =
          fn (Word w1, Word w2) => bool (WordX.equals (w1, w2))
           | _ => ApplyResult.Unknown
+
       val equal =
          fn (IntInf ii1, IntInf ii2) => bool (IntInf.equals (ii1, ii2))
           | (Word w1, Word w2) => bool (WordX.equals (w1, w2))

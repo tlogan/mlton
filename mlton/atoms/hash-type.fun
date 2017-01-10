@@ -225,5 +225,6 @@ fun checkPrimApp {args, prim, result, targs}: bool =
                               unit = unit,
                               vector = vector,
                               weak = weak,
-                              word = word}})
+                              word = word,
+                              wordSimd = wordSimd}})
 end

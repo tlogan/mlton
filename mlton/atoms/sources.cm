@@ -35,6 +35,7 @@ signature TYVAR
 signature WORD_SIZE
 signature WORD_X
 signature WORD_X_VECTOR
+signature WORD_SIMD_SIZE
  
 functor PrimCons
 functor PrimTycons
@@ -60,6 +61,10 @@ word-size.sig
 word-size.fun
 word-x.sig
 word-x.fun
+word-simd-size.sig
+word-simd-size.fun
+word-simd-x.sig
+word-simd-x.fun
 word-x-vector.sig
 word-x-vector.fun
 real-x.sig

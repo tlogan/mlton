@@ -13,6 +13,7 @@ signature REPRESENTATION_STRUCTS =
       structure Ssa: SSA2
       sharing Rssa.RealSize = Ssa.RealSize
       sharing Rssa.WordSize = Ssa.WordSize
+      sharing Rssa.WordSimdSize = Ssa.WordSimdSize
    end
 
 signature REPRESENTATION = 

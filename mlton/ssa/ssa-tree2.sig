@@ -60,6 +60,7 @@ signature SSA_TREE2 =
              | Thread
              | Weak of t
              | Word of WordSize.t
+             | WordSimd of WordSimdSize.t
 
             val array1: t -> t
             val bool: t
@@ -86,6 +87,7 @@ signature SSA_TREE2 =
             val vector1: t -> t
             val weak: t -> t
             val word: WordSize.t -> t
+            val wordSimd: WordSimdSize.t -> t
             val unit: t
          end
 

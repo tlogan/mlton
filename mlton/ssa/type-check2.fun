@@ -89,6 +89,7 @@ fun checkScopes (program as
                   | Thread => ()
                   | Weak ty => loopType ty
                   | Word _ => ()
+                  | WordSimd _ => ()
            in
               ()
            end))

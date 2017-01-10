@@ -235,7 +235,8 @@ fun transform (Program.T {datatypes, globals, functions, main}) =
                    | Tuple ts => Vector.foreach (ts, setTypeDependents)
                    | Vector t => setTypeDependents t
                    | Weak t => setTypeDependents t
-                   | Word _ => ()))
+                   | Word _ => ()
+                   | WordSimd _ => ()))
              val _ =
                 Vector.foreach (cons, fn {args, ...} =>
                                 Vector.foreach (args, setTypeDependents))

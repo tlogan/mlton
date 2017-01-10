@@ -24,12 +24,18 @@ datatype t =
  | Word16
  | Word32
  | Word64
+ | WordSimd8x16
+ | WordSimd16x8
+ | WordSimd32x4
+ | WordSimd64x2
 
 val all = [CPointer,
            Int8, Int16, Int32, Int64,
            Objptr,
            Real32, Real64,
-           Word8, Word16, Word32, Word64]
+           Word8, Word16, Word32, Word64,
+           WordSimd8x16, WordSimd16x8, 
+           WordSimd32x4, WordSimd64x2]
 
 val cpointer = CPointer
 val objptr = Objptr
@@ -51,6 +57,10 @@ fun memo (f: t -> 'a): t -> 'a =
       val word16 = f Word16
       val word32 = f Word32
       val word64 = f Word64
+      val wordSimd8x16 = f WordSimd8x16
+      val wordSimd16x8 = f WordSimd16x8
+      val wordSimd32x4 = f WordSimd32x4
+      val wordSimd64x2 = f WordSimd64x2
    in
       fn CPointer => cpointer
        | Int8 => int8
@@ -64,6 +74,10 @@ fun memo (f: t -> 'a): t -> 'a =
        | Word16 => word16
        | Word32 => word32
        | Word64 => word64
+       | WordSimd8x16 => wordSimd8x16 
+       | WordSimd16x8 => wordSimd16x8 
+       | WordSimd32x4 => wordSimd32x4 
+       | WordSimd64x2 => wordSimd64x2 
    end
 
 val toString =
@@ -79,6 +93,10 @@ val toString =
     | Word16 => "Word16"
     | Word32 => "Word32"
     | Word64 => "Word64"
+    | WordSimd8x16 => "WordSimd8x16" 
+    | WordSimd16x8 => "WordSimd16x8"
+    | WordSimd32x4 => "WordSimd32x4"
+    | WordSimd64x2 => "WordSimd64x2"
 
 val layout = Layout.str o toString
 
@@ -96,6 +114,10 @@ fun size (t: t): Bytes.t =
     | Word16 => Bytes.fromInt 2
     | Word32 => Bytes.fromInt 4
     | Word64 => Bytes.fromInt 8
+    | WordSimd8x16 => Bytes.fromInt 16 
+    | WordSimd16x8 => Bytes.fromInt 16 
+    | WordSimd32x4 => Bytes.fromInt 16 
+    | WordSimd64x2 => Bytes.fromInt 16 
 
 fun name t =
    case t of
@@ -111,6 +133,10 @@ fun name t =
     | Word16 => "W16"
     | Word32 => "W32"
     | Word64 => "W64"
+    | WordSimd8x16 => "W8x16" 
+    | WordSimd16x8 => "W16x8" 
+    | WordSimd32x4 => "W32x4" 
+    | WordSimd64x2 => "W64x2" 
 
 fun align (t: t, b: Bytes.t): Bytes.t =
    Bytes.align (b, {alignment = size t})
@@ -132,6 +158,19 @@ fun word' (b: Bits.t, {signed: bool}): t =
     | (false, 64) => Word64
     | (true, 64) => Int64
     | _ => Error.bug "CType.word'"
+
+
+local structure WS = WordSimdSize in
+
+fun wordSimd (s: WordSimdSize.t): t = 
+   case (Bits.toInt (WS.wordBits s), WS.size s) of
+      (8, 16) => WordSimd8x16
+    | (16, 8) => WordSimd16x8
+    | (32, 4) => WordSimd32x4
+    | (64, 2) => WordSimd64x2
+    | _ => Error.bug "CType.wordSimd'"
+
+end
 
 fun word (s: WordSize.t, {signed: bool}): t =
    word' (WordSize.bits s, {signed = signed})

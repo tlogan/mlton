@@ -130,6 +130,8 @@ in
    ../integer/int.sml
    ../integer/word.sig
    ../integer/word.sml
+   ../integer/word-simd.sig
+   ../integer/word-simd.sml
    local 
       ../config/bind/int-top.sml 
       ../config/bind/pointer-prim.sml

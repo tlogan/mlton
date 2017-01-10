@@ -42,6 +42,7 @@ in
    prim-word.sml
    prim-int.sml
 
+
    local 
       ../config/bind/int-prim.sml 
       ../config/bind/pointer-prim.sml
@@ -63,6 +64,8 @@ in
 
    prim-char.sml
    prim-string.sml
+
+   prim-word-simd.sml
 
    prim-real.sml
 

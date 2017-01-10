@@ -251,6 +251,11 @@ structure BasisExtra :> BASIS_EXTRA =
       structure Word64Vector = Word64Vector
       structure Word64VectorSlice = Word64VectorSlice
 
+      structure WordSimd8x16 = WordSimd8x16
+      structure WordSimd16x8 = WordSimd16x8
+      structure WordSimd32x4 = WordSimd32x4
+      structure WordSimd64x2 = WordSimd64x2
+
       (* Non-standard structures *)
       structure SML90 = SML90
       structure MLton = MLton

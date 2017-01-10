@@ -27,6 +27,7 @@ structure Type =
         | Real of RealSize.t
         | Seq of t vector
         | Word of WordSize.t
+        | WordSimd of WordSimdSize.t
 
       local
          fun make f (T r) = f r
@@ -53,6 +54,7 @@ structure Type =
              | Real s => str (concat ["Real", RealSize.toString s])
              | Seq ts => List.layout layout (Vector.toList ts)
              | Word s => str (concat ["Word", WordSize.toString s])
+             | WordSimd s => str (concat ["WordSimd", WordSimdSize.toString s])
          end
 
       val rec equals: t * t -> bool =
@@ -99,6 +101,9 @@ structure Type =
  
       val word: WordSize.t -> t = 
          fn s => T {node = Word s, width = WordSize.bits s}
+
+      val wordSimd: WordSimdSize.t -> t = 
+         fn s => T {node = WordSimd s, width = WordSimdSize.bits s}
 
 
       val bool: t = word WordSize.bool
@@ -334,6 +339,13 @@ structure Type =
                      (case s of
                          RealSize.R32 => C.Real32
                        | RealSize.R64 => C.Real64)
+                | WordSimd s =>
+                     (case (Bits.toInt (WordSimdSize.wordBits s), WordSimdSize.size s) of
+                        (8, 16) => C.WordSimd8x16
+                      | (16, 8) => C.WordSimd16x8
+                      | (32, 4) => C.WordSimd32x4
+                      | (64, 2) => C.WordSimd64x2
+                      | _ => Error.bug "RepType.toCType'")
                 | _ => C.fromBits (width t)
                          
          val name = C.name o toCType
@@ -400,13 +412,22 @@ structure ObjectType =
                end
           | Normal {ty, ...} =>
                let
-                  val b = Bits.+ (Type.width ty,
-                                  Type.width (Type.objptrHeader ()))
+                 fun typeBitAdd (t, b) = Bits.+ (Type.width t, b)
+                 val nextNormalStart = List.fold ([ty, Type.objptrHeader ()], Bits.zero, typeBitAdd)
+
+                 val nextArrayStart = List.fold ([
+                    ty,
+                    Type.objptrHeader (),
+                    Type.seqIndex (), 
+                    Type.seqIndex ()
+                  ], Bits.zero, typeBitAdd)
+                    
                in
                   not (Type.isUnit ty) 
                   andalso (case !Control.align of
-                              Control.Align4 => Bits.isWord32Aligned b
-                            | Control.Align8 => Bits.isWord64Aligned b)
+                              Control.Align4 => Bits.isWord32Aligned nextNormalStart 
+                            | Control.Align8 => Bits.isWord64Aligned nextNormalStart 
+                            | Control.Align16 => Bits.isWord128Aligned nextNormalStart andalso Bits.isWord128Aligned nextArrayStart)
                end
           | Stack => true
           | Weak to => Option.fold (to, true, fn (t,_) => Type.isObjptr t)
@@ -421,6 +442,7 @@ structure ObjectType =
                      case !Control.align of
                         Control.Align4 => Bytes.fromInt 4
                       | Control.Align8 => Bytes.fromInt 8
+                      | Control.Align16 => Bytes.fromInt 16 
                   val bytesHeader =
                      Bits.toBytes (Control.Target.Size.header ())
                   val bytesCSize =
@@ -732,6 +754,7 @@ fun checkOffset {base, isVector, offset, result} =
          case !Control.align of
             Control.Align4 => Bits.inWord32
           | Control.Align8 => Bits.inWord64
+          | Control.Align16 => Bits.inWord128
 
       val baseBits = width base
       val baseTys = getTys base

@@ -27,6 +27,7 @@ structure Tycon =
                      structure Kind = TyconKind
                      structure RealSize = RealSize
                      structure WordSize = WordSize
+                     structure WordSimdSize = WordSimdSize
                      open Id
                      fun fromString s =
                         Id.fromSymbol (Symbol.fromString s, Region.bogus))

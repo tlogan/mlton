@@ -445,6 +445,30 @@ structure Weak =
       type 'a t = 'a weak
    end
 
+structure WordSimd8x16 = 
+   struct
+      type t = wordSimd8x16
+      type wordSimd = t
+    end
+
+structure WordSimd16x8 = 
+   struct
+      type t = wordSimd16x8
+      type wordSimd = t
+    end
+
+structure WordSimd32x4 = 
+   struct
+      type t = wordSimd32x4
+      type wordSimd = t
+    end
+
+structure WordSimd64x2 = 
+   struct
+      type t = wordSimd64x2
+      type wordSimd = t
+    end
+
 end
 
 (* Top-level bindings *)

@@ -786,6 +786,7 @@ fun transform2 (program as Program.T {datatypes, functions, globals, main}) =
                                | Thread => Size.makeTop s
                                | Weak _ => ()
                                | Word _ => ()
+                               | WordSimd _ => ()
                         in
                            s
                         end))

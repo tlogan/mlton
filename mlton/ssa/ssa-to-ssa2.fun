@@ -51,7 +51,8 @@ fun convert (S.Program.T {datatypes, functions, globals, main}) =
                                               isMutable = false})))
             | S.Type.Vector t => S2.Type.vector1 (convertType t)
             | S.Type.Weak t => S2.Type.weak (convertType t)
-            | S.Type.Word s => S2.Type.word s))
+            | S.Type.Word s => S2.Type.word s
+            | S.Type.WordSimd s => S2.Type.wordSimd s))
       fun convertTypes ts = Vector.map (ts, convertType)
       val {get = conType: Con.t -> S2.Type.t, set = setConType, ...} =
          Property.getSetOnce (Con.plist,

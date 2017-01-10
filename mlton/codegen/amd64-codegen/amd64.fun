@@ -109,6 +109,10 @@ struct
              | Word16 => Vector.new1 WORD
              | Word32 => Vector.new1 LONG
              | Word64 => Vector.new1 QUAD
+             | WordSimd8x16 => Vector.new2 (QUAD, QUAD)
+             | WordSimd16x8 => Vector.new2 (QUAD, QUAD)
+             | WordSimd32x4 => Vector.new2 (QUAD, QUAD)
+             | WordSimd64x2 => Vector.new2 (QUAD, QUAD)
       end
 
       val class
@@ -637,6 +641,7 @@ struct
              | Word16 => Two
              | Word32 => Four
              | Word64 => Eight
+             | _ => Error.bug "amd64.Scale.fromCType"
       end
 
       fun eq(s1, s2) = s1 = s2
@@ -1404,6 +1409,7 @@ struct
                    | Word16 => w16
                    | Word32 => w32
                    | Word64 => w64
+                   | _ => Error.bug "amd64.cReturnTemps"
                end
       end
     end

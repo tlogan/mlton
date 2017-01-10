@@ -26,6 +26,7 @@ in
    structure Symbol = Symbol
    structure WordSize = WordSize
    structure WordX = WordX
+   structure WordSimdSize = WordSimdSize
 end
 structure Ast = Ast (open Atoms)
 structure TypeEnv = TypeEnv (open Atoms)

@@ -228,6 +228,29 @@ fun implementsPrim (p: 'a Prim.t): bool =
        | Word_sub _ => true
        | Word_subCheck _ => true
        | Word_xorb _ => true
+
+       | WordSimd_add _ => true
+       | WordSimd_andb _ => true
+       | WordSimd_equal _ => true
+       | WordSimd_ge _ => true
+       | WordSimd_gt _ => true
+       | WordSimd_le _ => true
+       | WordSimd_lt _ => true
+       | WordSimd_lshift _ => true
+       | WordSimd_mul _ => true
+       | WordSimd_neg _ => true
+       | WordSimd_notb _ => true
+       | WordSimd_orb _ => true
+       | WordSimd_quot (_, {signed}) => not signed
+       | WordSimd_rem (_, {signed}) => not signed
+       | WordSimd_rol _ => true
+       | WordSimd_ror _ => true
+       | WordSimd_rshift _ => true
+       | WordSimd_sub _ => true
+       | WordSimd_xorb _ => true
+
+       | WordSimd_fromVector _ => true
+       | WordSimd_toArray _ => true
        | _ => false
    end
 
@@ -372,6 +395,7 @@ fun outputDeclarations
                                   case !Control.align of
                                      Control.Align4 => Bytes.fromInt 4
                                    | Control.Align8 => Bytes.fromInt 8
+                                   | Control.Align16 => Bytes.fromInt 16 
                                val bytesCPointer =
                                   Bits.toBytes (Control.Target.Size.cpointer ())
                                val bytesHeader =
@@ -409,6 +433,7 @@ fun outputDeclarations
                case !Control.align of
                   Control.Align4 => 4
                 | Control.Align8 => 8
+                | Control.Align16 => 16 
             val magic =
                let
                   val version = String.hash Version.version

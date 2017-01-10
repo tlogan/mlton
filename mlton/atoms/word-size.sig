@@ -45,7 +45,7 @@ signature WORD_SIZE =
       val shiftArg: t
       val smallIntInfWord: unit -> t
       val toString: t -> string
-      val word8: t      
+      val word8: t 
       val word16: t
       val word32: t
       val word64: t

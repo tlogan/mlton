@@ -1,4 +1,4 @@
-(* Copyright (C) 2009 Matthew Fluet.
+  (* Copyright (C) 2009 Matthew Fluet.
  * Copyright (C) 1999-2007 Henry Cejtin, Matthew Fluet, Suresh
  *    Jagannathan, and Stephen Weeks.
  * Copyright (C) 1997-2000 NEC Research Institute.
@@ -19,6 +19,7 @@ signature AST_ATOMS_STRUCTS =
       structure TyconKind: TYCON_KIND
       structure Tyvar: TYVAR
       structure WordSize: WORD_SIZE
+      structure WordSimdSize: WORD_SIMD_SIZE
       sharing Record.Field = SortedRecord.Field
       sharing Symbol = Record.Field.Symbol
    end

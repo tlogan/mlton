@@ -49,6 +49,7 @@ local
    fun 'a make (prefix: string,
                 all: 'a list,
                 bits: 'a -> Bits.t,
+                toString: 'a -> string,
                 equalsA: 'a * 'a -> bool,
                 memo: ('a -> t) -> ('a -> t),
                 admitsEquality: AdmitsEquality.t) =
@@ -56,7 +57,7 @@ local
          val all =
             Vector.fromListMap
             (all, fn s => let
-               val name = concat [prefix, Bits.toString (bits s)]
+               val name = concat [prefix, toString s]
             in
                {name = name,
                 size = s,
@@ -88,25 +89,31 @@ in
       let
          open CharSize
       in
-         make ("char", all, bits, equals, memoize, Sometimes)
+         make ("char", all, bits, Bits.toString o bits, equals, memoize, Sometimes)
       end
    val (int, ints, isIntX, deIntX, primInts) =
       let
          open IntSize
       in
-         make ("int", all, bits, equals, memoize, Sometimes)
+         make ("int", all, bits, Bits.toString o bits, equals, memoize, Sometimes)
       end
    val (real, reals, isRealX, deRealX, primReals) =
       let
          open RealSize
       in
-         make ("real", all, bits, equals, memoize, Never)
+         make ("real", all, bits, toString, equals, memoize, Never)
       end
    val (word, words, isWordX, deWordX, primWords) =
       let
          open WordSize
       in
-         make ("word", all, bits, equals, memoize, Sometimes)
+         make ("word", all, bits, toString, equals, memoize, Sometimes)
+      end
+   val (wordSimd, wordSimds, isWordSimdX, deWordSimdX, primWordSimds) =
+      let
+         open WordSimdSize 
+      in
+         make ("wordSimd", all, bits, toString, equals, memoize, Sometimes)
       end
 end
 
@@ -128,7 +135,7 @@ val prims =
               kind = kind,
               name = name,
               tycon = tycon})
-   @ primChars @ primInts @ primReals @ primWords
+   @ primChars @ primInts @ primReals @ primWords @ primWordSimds
 
 val array = #2 array
 val arrow = #2 arrow
@@ -167,6 +174,14 @@ val defaultWord = fn () =>
     | "word32" => word (WordSize.fromBits (Bits.fromInt 32))
     | "word64" => word (WordSize.fromBits (Bits.fromInt 64))
     | _ => Error.bug "PrimTycons.defaultWord"
+
+val defaultWordSimd = fn () => 
+   case !Control.defaultWord of
+      "word8" => wordSimd WordSimdSize.wordSimd8x16
+    | "word16" => wordSimd WordSimdSize.wordSimd16x8
+    | "word32" => wordSimd WordSimdSize.wordSimd32x4
+    | "word64" => wordSimd WordSimdSize.wordSimd64x2
+    | _ => Error.bug "PrimTycons.defaultWordSimd"
 
 val isBool = fn c => equals (c, bool)
 val isCPointer = fn c => equals (c, cpointer)

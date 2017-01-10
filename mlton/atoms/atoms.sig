@@ -41,6 +41,8 @@ signature ATOMS' =
       structure WordSize: WORD_SIZE
       structure WordX: WORD_X
       structure WordXVector: WORD_X_VECTOR
+      structure WordSimdSize: WORD_SIMD_SIZE
+      structure WordSimdX: WORD_SIMD_X
 
       sharing AdmitsEquality = Tycon.AdmitsEquality
       sharing CFunction = Ffi.CFunction = Prim.CFunction
@@ -56,9 +58,11 @@ signature ATOMS' =
       sharing SourceInfo = ProfileExp.SourceInfo
       sharing TyconKind = Tycon.Kind
       sharing WordSize = CType.WordSize = Prim.WordSize = Tycon.WordSize
-         = WordX.WordSize
+         = WordX.WordSize = WordSimdSize.WordSize
       sharing WordX = Const.WordX = WordXVector.WordX
       sharing WordXVector = Const.WordXVector
+      sharing WordSimdSize = CType.WordSimdSize = Prim.WordSimdSize 
+        = WordSimdX.WordSimdSize = Tycon.WordSimdSize
    end
 
 signature ATOMS =
@@ -99,7 +103,7 @@ signature ATOMS =
       sharing TyconKind = Atoms.TyconKind
       sharing Tyvar = Atoms.Tyvar
       sharing Var = Atoms.Var
-      sharing WordSize = Atoms.WordSize
+      sharing WordSize = Atoms.WordSize = WordSimdSize.WordSize
       sharing WordX = Atoms.WordX
       sharing WordXVector = Atoms.WordXVector
    end

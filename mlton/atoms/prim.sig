@@ -15,8 +15,9 @@ signature PRIM_STRUCTS =
       structure Const: CONST
       structure RealSize: REAL_SIZE
       structure WordSize: WORD_SIZE
+      structure WordSimdSize: WORD_SIMD_SIZE
       sharing RealSize = Const.RealX.RealSize
-      sharing WordSize = Const.WordX.WordSize
+      sharing WordSize = Const.WordX.WordSize = WordSimdSize.WordSize
    end
 
 signature PRIM = 
@@ -40,11 +41,13 @@ signature PRIM =
              | CPointer_getObjptr (* ssa to rssa *)
              | CPointer_getReal of RealSize.t (* ssa to rssa *)
              | CPointer_getWord of WordSize.t (* ssa to rssa *)
+             | CPointer_getWordSimd of WordSimdSize.t (* ssa to rssa *)
              | CPointer_lt (* codegen *)
              | CPointer_setCPointer (* ssa to rssa *)
              | CPointer_setObjptr (* ssa to rssa *)
              | CPointer_setReal of RealSize.t (* ssa to rssa *)
              | CPointer_setWord of WordSize.t (* ssa to rssa *)
+             | CPointer_setWordSimd of WordSimdSize.t (* ssa to rssa *)
              | CPointer_sub (* codegen *)
              | CPointer_toWord (* codegen *)
              | Exn_extra (* implement exceptions *)
@@ -152,6 +155,7 @@ signature PRIM =
              | Weak_canGet (* ssa to rssa *)
              | Weak_get (* ssa to rssa *)
              | Weak_new (* ssa to rssa *)
+
              | Word_add of WordSize.t (* codegen *)
              | Word_addCheck of WordSize.t * {signed: bool} (* codegen *)
              | Word_andb of WordSize.t (* codegen *)
@@ -176,11 +180,35 @@ signature PRIM =
              | Word_subCheck of WordSize.t* {signed: bool} (* codegen *)
              | Word_toIntInf (* ssa to rssa *)
              | Word_xorb of WordSize.t (* codegen *)
+
              | WordVector_toIntInf (* ssa to rssa *)
              | Word8Array_subWord of WordSize.t (* ssa to rssa *)
              | Word8Array_updateWord of WordSize.t (* ssa to rssa *)
              | Word8Vector_subWord of WordSize.t (* ssa to rssa *)
              | Word8Vector_toString (* defunctorize *)
+
+             | WordSimd_add of WordSimdSize.t (* codegen *)
+             | WordSimd_andb of WordSimdSize.t (* codegen *)
+             | WordSimd_equal of WordSimdSize.t (* codegen *)
+             | WordSimd_ge of WordSimdSize.t * {signed: bool} (* codegen *)
+             | WordSimd_gt of WordSimdSize.t * {signed: bool} (* codegen *)
+             | WordSimd_le of WordSimdSize.t * {signed: bool} (* codegen *)
+             | WordSimd_lt of WordSimdSize.t * {signed: bool} (* codegen *)
+             | WordSimd_lshift of WordSimdSize.t (* codegen *)
+             | WordSimd_mul of WordSimdSize.t * {signed: bool} (* codegen *)
+             | WordSimd_neg of WordSimdSize.t (* codegen *)
+             | WordSimd_notb of WordSimdSize.t (* codegen *)
+             | WordSimd_orb of WordSimdSize.t (* codegen *)
+             | WordSimd_quot of WordSimdSize.t * {signed: bool} (* codegen *)
+             | WordSimd_rem of WordSimdSize.t * {signed: bool} (* codegen *)
+             | WordSimd_rol of WordSimdSize.t (* codegen *)
+             | WordSimd_ror of WordSimdSize.t (* codegen *)
+             | WordSimd_rshift of WordSimdSize.t * {signed: bool} (* codegen *)
+             | WordSimd_sub of WordSimdSize.t (* codegen *)  
+             | WordSimd_xorb of WordSimdSize.t (* codegen *)
+
+             | WordSimd_fromVector of WordSimdSize.t (* codegen *)
+             | WordSimd_toArray of WordSimdSize.t (* codegen *)
              | World_save (* ssa to rssa *)
 
             val toString: 'a t -> string
@@ -214,6 +242,7 @@ signature PRIM =
       val apply:
          'a t * 'b ApplyArg.t list * ('b * 'b -> bool) -> ('a, 'b) ApplyResult.t
       val array: 'a t
+      val arrayToVector: 'a t
       val arrayLength: 'a t
       val assign: 'a t
       val bogus: 'a t
@@ -234,7 +263,8 @@ signature PRIM =
                                       unit: 'a,
                                       vector: 'a -> 'a,
                                       weak: 'a -> 'a,
-                                      word: WordSize.t -> 'a}} -> bool
+                                      word: WordSize.t -> 'a,
+                                      wordSimd: WordSimdSize.t -> 'a}} -> bool
       val cpointerAdd: 'a t
       val cpointerDiff: 'a t
       val cpointerEqual: 'a t
@@ -302,4 +332,6 @@ signature PRIM =
       val wordRshift: WordSize.t * {signed: bool} -> 'a t
       val wordSub: WordSize.t -> 'a t
       val wordXorb: WordSize.t -> 'a t
+      val wordSimdToArray: WordSimdSize.t -> 'a t
+
    end

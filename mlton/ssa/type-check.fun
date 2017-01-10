@@ -74,6 +74,7 @@ fun checkScopes (program as
                   | Vector ty => loopType ty
                   | Weak ty => loopType ty
                   | Word _ => ()
+                  | WordSimd _ => ()
            in
               ()
            end))

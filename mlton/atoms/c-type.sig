@@ -10,6 +10,7 @@ signature C_TYPE_STRUCTS =
    sig
       structure RealSize: REAL_SIZE
       structure WordSize: WORD_SIZE
+      structure WordSimdSize: WORD_SIMD_SIZE
    end
 
 signature C_TYPE = 
@@ -29,6 +30,10 @@ signature C_TYPE =
        | Word16
        | Word32
        | Word64
+       | WordSimd8x16
+       | WordSimd16x8
+       | WordSimd32x4
+       | WordSimd64x2
 
       val align: t * Bytes.t -> Bytes.t
       val all: t list
@@ -45,6 +50,7 @@ signature C_TYPE =
       val layout: t -> Layout.t
       val objptr: t
       val real: RealSize.t -> t
+      val wordSimd: WordSimdSize.t -> t
       val seqIndex: unit -> t
       val shiftArg: t
       val size: t -> Bytes.t

@@ -124,6 +124,7 @@ structure Type =
         | Thread
         | Weak of t
         | Word of WordSize.t
+        | WordSimd of WordSimdSize.t
 
       local
          fun make f (T r) = f r
@@ -167,6 +168,7 @@ structure Type =
              | (Thread, Thread) => true
              | (Weak t1, Weak t2) => equals (t1, t2)
              | (Word s1, Word s2) => WordSize.equals (s1, s2)
+             | (WordSimd ws1, WordSimd ws2) => WordSimdSize.equals (ws1, ws2)
              | _ => false
          val table: t HashSet.t = HashSet.new {hash = hash}
       in
@@ -216,6 +218,9 @@ structure Type =
 
       val word: WordSize.t -> t =
          fn s => lookup (Tycon.hash (Tycon.word s), Word s)
+
+      val wordSimd: WordSimdSize.t -> t =
+        fn s => lookup (Tycon.hash (Tycon.wordSimd s), WordSimd s) 
 
       local
          val generator: Word.t = 0wx5555
@@ -303,7 +308,8 @@ structure Type =
                | Real s => str (concat ["real", RealSize.toString s])
                | Thread => str "thread"
                | Weak t => seq [layout t, str " weak"]
-               | Word s => str (concat ["word", WordSize.toString s])))
+               | Word s => str (concat ["word", WordSize.toString s])
+               | WordSimd s => str (concat ["wordSimd", WordSimdSize.toString s])))
       end
 
       fun checkPrimApp {args, prim, result}: bool =
@@ -340,7 +346,8 @@ structure Type =
                                unit = unit,
                                vector = vector1,
                                weak = weak,
-                               word = word}})
+                               word = word,
+                               wordSimd = wordSimd}})
                end
             val default = fn () =>
                (default ()) handle BadPrimApp => false
@@ -1997,6 +2004,7 @@ structure Program =
                         | Thread => ()
                         | Weak t => countType t
                         | Word _ => ()
+                        | WordSimd _ => ()
                     val _ = Int.inc numTypes
                  in
                     ()

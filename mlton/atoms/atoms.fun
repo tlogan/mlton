@@ -1,5 +1,6 @@
 (* Copyright (C) 1999-2007 Henry Cejtin, Matthew Fluet, Suresh
  *    Jagannathan, and Stephen Weeks.
+      type word = Word64.word
  * Copyright (C) 1997-2000 NEC Research Institute.
  *
  * MLton is released under a BSD-style license.
@@ -17,14 +18,20 @@ structure Atoms =
       structure IntSize = IntSize ()
       structure RealSize = RealSize ()
       structure WordSize = WordSize ()
+      structure WordSimdSize = WordSimdSize (structure WordSize = WordSize)
 
       structure WordX = WordX (structure WordSize = WordSize)
       structure WordXVector = WordXVector (structure WordSize = WordSize
                                            structure WordX = WordX)
       structure RealX = RealX (structure RealSize = RealSize
                                structure WordX = WordX)
+
+      structure WordSimdX = WordSimdX (structure WordSimdSize = WordSimdSize
+                               structure WordX = WordX)
+
       structure Const = Const (structure RealX = RealX
                                structure WordX = WordX
+                               structure WordSimdX = WordSimdX
                                structure WordXVector = WordXVector)
 
       structure Symbol = Symbol ()
@@ -42,7 +49,8 @@ structure Atoms =
                                structure IntSize = IntSize
                                structure Kind = TyconKind
                                structure RealSize = RealSize
-                               structure WordSize = WordSize)
+                               structure WordSize = WordSize
+                               structure WordSimdSize = WordSimdSize)
       structure Con = Con ()
       structure Var = Var ()
       structure Func =
@@ -57,7 +65,8 @@ structure Atoms =
          end
 
       structure CType = CType (structure RealSize = RealSize
-                               structure WordSize = WordSize)
+                               structure WordSize = WordSize
+                               structure WordSimdSize = WordSimdSize)
       structure CFunction = CFunction (structure CType = CType)
       structure Ffi = Ffi (structure CFunction = CFunction
                            structure CType = CType)
@@ -67,7 +76,8 @@ structure Atoms =
                              structure Con = Con
                              structure Const = Const
                              structure RealSize = RealSize
-                             structure WordSize = WordSize)
+                             structure WordSize = WordSize
+                             structure WordSimdSize = WordSimdSize)
 
       structure SourceInfo = SourceInfo ()
       structure ProfileLabel = ProfileLabel ()

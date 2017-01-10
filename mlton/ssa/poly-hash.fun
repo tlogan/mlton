@@ -617,6 +617,52 @@ fun transform (Program.T {datatypes, globals, functions, main}) =
                                 ty = Hash.stateTy}
                 | Type.Weak _ => stateful ()
                 | Type.Word ws => Hash.wordBytes (dst, dx, ws)
+                | Type.WordSimd wss => 
+                    let
+                       val ws = WordSimdSize.word wss
+                       val wty = Type.word ws 
+                       val sz = Int.toIntInf (WordSimdSize.size wss)
+                       
+                       val asz = Dexp.word (
+                         WordX.fromIntInf (sz, WordSize.seqIndex ())
+                       )
+
+                       val emptyArr = Dexp.primApp {
+                           prim = Prim.array 
+                         , targs = Vector.new1 wty 
+                         , args = Vector.new1 asz
+                         , ty = Type.array wty
+                       }
+
+                       val arrVar = Var.newString "arrVar"
+
+                       val arrUpd = Dexp.primApp {
+                           prim = Prim.wordSimdToArray wss 
+                         , targs = Vector.new0 ()
+                         , args = Vector.new2 (dx,  Dexp.var (arrVar, Type.array wty))
+                         , ty = Type.unit
+                       }
+
+                       val vec = Dexp.lett {
+                           decs = [
+                               {var = arrVar, exp = emptyArr}
+                             , {var = Var.newNoname (), exp = arrUpd}
+                           ]
+                         , body = Dexp.primApp {
+                             prim = Prim.arrayToVector
+                           , targs = Vector.new1 wty 
+                           , args = Vector.new1 (Dexp.var (arrVar, Type.array wty))  
+                           , ty = Type.vector wty
+                         }
+                       }
+
+                    in
+                       Dexp.call {
+                           func = vectorHashFunc wty
+                         , args = Vector.new2 (dst, vec)
+                         , ty = Hash.stateTy
+                       }
+                    end
          in
             body
          end

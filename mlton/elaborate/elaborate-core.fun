@@ -117,6 +117,7 @@ in
    structure WordSize = WordSize
    structure WordX = WordX
    structure WordXVector = WordXVector
+   structure WordSimdSize = WordSimdSize
 end
 
 structure AdmitsEquality = Tycon.AdmitsEquality
@@ -921,6 +922,10 @@ structure Type =
              ("CPointer", CType.cpointer, Tycon.cpointer),
              ("Real32", CType.real RealSize.R32, Tycon.real RealSize.R32),
              ("Real64", CType.real RealSize.R64, Tycon.real RealSize.R64),
+             ("WordSimd8x16", CType.wordSimd WordSimdSize.wordSimd8x16, Tycon.wordSimd WordSimdSize.wordSimd8x16),
+             ("WordSimd16x8", CType.wordSimd WordSimdSize.wordSimd16x8, Tycon.wordSimd WordSimdSize.wordSimd16x8),
+             ("WordSimd32x4", CType.wordSimd WordSimdSize.wordSimd32x4, Tycon.wordSimd WordSimdSize.wordSimd32x4),
+             ("WordSimd64x2", CType.wordSimd WordSimdSize.wordSimd64x2, Tycon.wordSimd WordSimdSize.wordSimd64x2),
              ("Thread", CType.thread, Tycon.thread)]
             @ sized (Tycon.char o CharSize.fromBits,
                      let

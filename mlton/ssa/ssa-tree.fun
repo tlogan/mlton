@@ -30,6 +30,7 @@ structure Type =
         | Vector of t
         | Weak of t
         | Word of WordSize.t
+        | WordSimd of WordSimdSize.t
 
       local
          fun make f (T r) = f r
@@ -76,6 +77,7 @@ structure Type =
              | (Vector t1, Vector t2) => equals (t1, t2)
              | (Weak t1, Weak t2) => equals (t1, t2)
              | (Word s1, Word s2) => WordSize.equals (s1, s2)
+             | (WordSimd ws1, WordSimd ws2) => WordSimdSize.equals (ws1, ws2)
              | _ => false
          val table: t HashSet.t = HashSet.new {hash = hash}
       in
@@ -128,6 +130,9 @@ structure Type =
 
       val word: WordSize.t -> t =
          fn s => lookup (Tycon.hash (Tycon.word s), Word s)
+
+      val wordSimd: WordSimdSize.t -> t =
+         fn s => lookup (Tycon.hash (Tycon.wordSimd s), WordSimd s)
 
 
       local
@@ -185,7 +190,9 @@ structure Type =
                                                " * ")))
                | Vector t => seq [layout t, str " vector"]
                | Weak t => seq [layout t, str " weak"]
-               | Word s => str (concat ["word", WordSize.toString s])))
+               | Word s => str (concat ["word", WordSize.toString s])
+               | WordSimd ws => str (concat ["wordSimd", WordSimdSize.toString ws])
+               ))
       end
 
       fun checkPrimApp {args, prim, result, targs}: bool =
@@ -210,7 +217,8 @@ structure Type =
                             unit = unit,
                             vector = vector,
                             weak = weak,
-                            word = word}})
+                            word = word,
+                            wordSimd = wordSimd}})
             val default = fn () =>
                (default ()) handle BadPrimApp => false
 
@@ -1765,6 +1773,7 @@ structure Program =
                         | Vector t => countType t
                         | Weak t => countType t
                         | Word _ => ()
+                        | WordSimd _ => ()
                     val _ = Int.inc numTypes
                  in
                     ()

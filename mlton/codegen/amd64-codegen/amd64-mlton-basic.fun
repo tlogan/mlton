@@ -238,6 +238,7 @@ struct
            fun make name size = Label.fromString (concat [prefix, name, size])
            val r = make "Real"
            val w = make "Word"
+           val ws = make "Wordsimd"
            datatype z = datatype CType.t
         in
            CType.memo
@@ -254,7 +255,12 @@ struct
              | Word8 => w "8"
              | Word16 => w "16"
              | Word32 => w "32"
-             | Word64 => w "64")
+             | Word64 => w "64"
+             | WordSimd8x16 => ws "8x16"
+             | WordSimd16x8 => ws "16x8"
+             | WordSimd32x4 => ws "32x4"
+             | WordSimd64x2 => ws "64x2"
+             )
         end
   in
      val local_base = make "local"

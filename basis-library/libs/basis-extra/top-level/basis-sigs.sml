@@ -48,6 +48,7 @@ signature TIMER = TIMER
 signature VECTOR = VECTOR 
 signature VECTOR_SLICE = VECTOR_SLICE 
 signature WORD = WORD
+signature WORD_SIMD = WORD_SIMD
 
 (* Optional signatures *)
 signature ARRAY2 = ARRAY2 

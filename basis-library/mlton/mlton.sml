@@ -132,6 +132,7 @@ structure Word64 =
       open Word64
       type t = word
    end
+
 structure Word8Array = struct
    open Word8Array
    type t = array

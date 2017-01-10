@@ -19,10 +19,13 @@ signature REP_TYPE_STRUCTS =
       structure WordSize: WORD_SIZE
       structure WordX: WORD_X
       structure WordXVector: WORD_X_VECTOR
+      structure WordSimdSize: WORD_SIMD_SIZE
       sharing CFunction = Prim.CFunction
       sharing RealSize = Prim.RealSize
       sharing WordSize = Prim.WordSize = WordX.WordSize
+              = WordSimdSize.WordSize
       sharing WordX = WordXVector.WordX
+      sharing WordSimdSize = Prim.WordSimdSize
    end
 
 signature REP_TYPE =
@@ -104,6 +107,7 @@ signature REP_TYPE =
       val word: WordSize.t -> t
       val wordVector: WordSize.t -> t
       val zero: Bits.t -> t
+      val wordSimd: WordSimdSize.t -> t
 
       structure BuiltInCFunction:
          sig

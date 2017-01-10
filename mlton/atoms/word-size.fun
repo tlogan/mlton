@@ -76,7 +76,7 @@ fun roundUpToPrim s =
                       then 32
                    else if bits = 64
                            then 64
-                        else Error.bug "WordSize.roundUpToPrim"
+                      else Error.bug "WordSize.roundUpToPrim"
    in
       fromBits (Bits.fromInt bits)
    end

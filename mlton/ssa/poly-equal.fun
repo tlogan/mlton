@@ -454,6 +454,56 @@ fun transform (Program.T {datatypes, globals, functions, main}) =
                              ty = Type.bool}
              | Type.Weak _ => eq ()
              | Type.Word ws => prim (Prim.wordEqual ws, Vector.new0 ())
+             | Type.WordSimd wss => 
+                 let
+
+                    val ws = WordSimdSize.word wss
+                    val wty = Type.word ws 
+                    val sz = Int.toIntInf (WordSimdSize.size wss)
+                    
+                    val asz = Dexp.word (
+                      WordX.fromIntInf (sz, WordSize.seqIndex ())
+                    )
+
+                    fun toVec dx = let
+                      val emptyArr = Dexp.primApp {
+                          prim = Prim.array 
+                        , targs = Vector.new1 wty 
+                        , args = Vector.new1 asz
+                        , ty = Type.array wty
+                      }
+
+                      val arrVar = Var.newString "arrVar"
+
+                      val arrUpd = Dexp.primApp {
+                          prim = Prim.wordSimdToArray wss 
+                        , targs = Vector.new0 ()
+                        , args = Vector.new2 (dx,  Dexp.var (arrVar, Type.array wty))
+                        , ty = Type.unit
+                      }
+
+                      val vec = Dexp.lett {
+                          decs = [
+                              {var = arrVar, exp = emptyArr}
+                            , {var = Var.newNoname (), exp = arrUpd}
+                          ]
+                        , body = Dexp.primApp {
+                            prim = Prim.arrayToVector
+                          , targs = Vector.new1 wty 
+                          , args = Vector.new1 (Dexp.var (arrVar, Type.array wty))  
+                          , ty = Type.vector wty
+                        }
+                      }
+                    in
+                      vec
+                    end
+                 in
+                    Dexp.call {
+                        func = vectorEqualFunc wty
+                      , args = Vector.new2 (toVec dx1, toVec dx2)
+                      , ty = Type.bool
+                    }
+                 end
          end
 
       val _ =

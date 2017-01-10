@@ -35,6 +35,7 @@ in
    structure Var = Var
    structure WordSize = WordSize
    structure WordX = WordX
+   structure WordSimdSize = WordSimdSize
 end
 structure S = Ssa
 local
@@ -81,7 +82,8 @@ structure Type =
                check (Bits.inWord16, fn () =>
                check (Bits.inWord32, fn () =>
                check (Bits.inWord64, fn () =>
-               Error.bug "PackedRepresentation.Type.mkPadToPrim")))))
+               check (Bits.inWord128, fn () =>
+               Error.bug "PackedRepresentation.Type.mkPadToPrim"))))))
             end
          fun mkPadToWidth (t: t, b': Bits.t, mk): t =
             let
@@ -809,27 +811,32 @@ structure ObjptrRep =
             val padBytes: Bytes.t =
                if isVector
                   then let
+                          (* for max 64 bit values align8 and align16 cases require the same thing  *)
+                          fun doAlign8AndAlign16 () = 
+                            if (Vector.exists
+                                (components, fn {component = c, ...} =>
+                                 (case Type.deReal (Component.ty c) of
+                                     NONE => false
+                                   | SOME s =>
+                                        RealSize.equals (s, RealSize.R64))
+                                 orelse
+                                 (case Type.deWord (Component.ty c) of
+                                     NONE => false
+                                   | SOME s =>
+                                        WordSize.equals (s, WordSize.word64))
+                                 orelse
+                                 (Type.isObjptr (Component.ty c)
+                                  andalso WordSize.equals (WordSize.objptr (),
+                                                           WordSize.word64))))
+                               then Bytes.alignWord64 width
+                            else width
+
                           val alignWidth =
                              case !Control.align of
                                 Control.Align4 => width
-                              | Control.Align8 =>
-                                   if (Vector.exists
-                                       (components, fn {component = c, ...} =>
-                                        (case Type.deReal (Component.ty c) of
-                                            NONE => false
-                                          | SOME s =>
-                                               RealSize.equals (s, RealSize.R64))
-                                        orelse
-                                        (case Type.deWord (Component.ty c) of
-                                            NONE => false
-                                          | SOME s =>
-                                               WordSize.equals (s, WordSize.word64))
-                                        orelse
-                                        (Type.isObjptr (Component.ty c)
-                                         andalso WordSize.equals (WordSize.objptr (),
-                                                                  WordSize.word64))))
-                                      then Bytes.alignWord64 width
-                                   else width
+                              | Control.Align8 => doAlign8AndAlign16 ()
+                              | Control.Align16 => doAlign8AndAlign16 ()
+                                  
                        in
                           Bytes.- (alignWidth, width)
                        end
@@ -845,6 +852,7 @@ structure ObjptrRep =
                           case !Control.align of
                              Control.Align4 => Bytes.alignWord32 width''
                            | Control.Align8 => Bytes.alignWord64 width''
+                           | Control.Align16 => Bytes.alignWord128 width''
                        val alignWidth' = Bytes.- (alignWidth'', Runtime.headerSize ())
                     in
                        Bytes.- (alignWidth', width)
@@ -900,7 +908,8 @@ structure ObjptrRep =
                if Bits.isZero (Type.width componentsTy)
                   then Type.zero (case !Control.align of
                                      Control.Align4 => Bits.inWord32
-                                   | Control.Align8 => Bits.inWord64)
+                                   | Control.Align8 => Bits.inWord64
+                                   | Control.Align16 => Bits.inWord64)
                else componentsTy
          in
             T {components = components,
@@ -2699,6 +2708,7 @@ fun compute (program as Ssa.Program.T {datatypes, ...}) =
                        r'
                     end
              | Word s => nonObjptr (Type.word s)
+             | WordSimd s => nonObjptr (Type.wordSimd s)
            end))
       val () = typeRepRef := typeRep
       val _ = typeRep (S.Type.vector1 (S.Type.word WordSize.byte))

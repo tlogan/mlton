@@ -26,6 +26,7 @@ signature TYPE_OPS =
       type realSize
       type tycon
       type wordSize
+      type wordSimdSize
       type t
 
       val array: t -> t
@@ -58,4 +59,5 @@ signature TYPE_OPS =
       val word8: t
       val word8Vector: t
       val word32: t
+      val wordSimd: wordSimdSize -> t
    end
