@@ -322,10 +322,14 @@ signature BASIS_EXTRA =
       structure Word64Vector : MONO_VECTOR
       structure Word64VectorSlice : MONO_VECTOR_SLICE
 
+(*
       structure WordSimd8x16 : WORD_SIMD
       structure WordSimd16x8 : WORD_SIMD
+*)
       structure WordSimd32x4 : WORD_SIMD
+(*
       structure WordSimd64x2 : WORD_SIMD
+*)
 
       (* Non-standard structures *)
       structure SML90: SML90
@@ -892,7 +896,11 @@ signature BASIS_EXTRA =
    where type Word32.word = Word32.word
    where type Word64.word = Word64.word
 
+(*
    where type WordSimd8x16.word = Word8.word
    where type WordSimd16x8.word = Word16.word
+*)
    where type WordSimd32x4.word = Word32.word
+(*
    where type WordSimd64x2.word = Word64.word
+*)

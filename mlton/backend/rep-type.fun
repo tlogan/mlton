@@ -72,6 +72,7 @@ structure Type =
            | (Real s, Real s') => RealSize.equals (s, s')
            | (Seq ts, Seq ts') => Vector.equals (ts, ts', equals)
            | (Word s, Word s') => WordSize.equals (s, s')
+           | (WordSimd s, WordSimd s') => WordSimdSize.equals (s, s')
            | _ => false)
 
       val sameWidth: t * t -> bool =
@@ -785,7 +786,7 @@ fun checkOffset {base, isVector, offset, result} =
          else offsetBits
    in
       List.exists 
-      ([Bits.inWord8, Bits.inWord16, Bits.inWord32, Bits.inWord64], fn primBits =>
+      ([Bits.inWord8, Bits.inWord16, Bits.inWord32, Bits.inWord64, Bits.inWord128], fn primBits =>
        Bits.equals (resultBits, primBits) 
        andalso Bits.isAligned (offsetBits, {alignment = Bits.min (primBits, alignBits)}))
       andalso

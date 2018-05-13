@@ -316,10 +316,14 @@ signature BASIS_2002 =
       structure Word64Vector : MONO_VECTOR
       structure Word64VectorSlice : MONO_VECTOR_SLICE
 
+(*
       structure WordSimd8x16 : WORD_SIMD
       structure WordSimd16x8 : WORD_SIMD
+*)
       structure WordSimd32x4 : WORD_SIMD
+(*
       structure WordSimd64x2 : WORD_SIMD
+*)
 
       (* ************************************************** *)
       (* ************************************************** *)

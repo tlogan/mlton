@@ -21,19 +21,19 @@ functor WordSimd (S: WORD_SIMD_STRUCTS) : WORD_SIMD = struct
     end
   )
 
-
-  (* the values produced for thirtyTwos are causing Subscript exception when used in << *)
   val thirtyTwos = WS.fromVector (Vector.tabulate (simdSize, fn _ => W.fromInt 32))
 
   fun << (is, ns) = let
     (* simd with 0 = false, -1 = true *)
-    val neg_cs = WS.>= (ns, thirtyTwos)
+    val neg_cs = WS.<= (ns, thirtyTwos)
     (* multiply by self so -1 becomes 1, 0 stays 0*)  
     val pos_cs = WS.* (neg_cs, neg_cs) 
   in
     WS.* (WS.<<? (is, ns), pos_cs)
   end 
 
+
+  (* TO DO: make safe *)
   fun div (m, n) = WS.quotUnsafe (m, n)
   fun mod (m, n) = WS.remUnsafe (m, n)
   fun >> (is, ns) = WS.>>? (is, ns)
@@ -41,34 +41,9 @@ functor WordSimd (S: WORD_SIMD_STRUCTS) : WORD_SIMD = struct
   fun rol (is, ns) = WS.rolUnsafe (is, ns)
   fun ror (is, ns) = WS.rorUnsafe (is, ns)
 
-(*
-
-TO DO
----------
-
-fun << (i, n) = 
-   if Word.>= (n, sizeInBitsWord)
-      then zero
-      else W.<<? (i, Primitive.Word32.zextdFromWord n)
-fun >> (i, n) = 
-   if Word.>= (n, sizeInBitsWord)
-      then zero
-      else W.>>? (i, Primitive.Word32.zextdFromWord n)
-fun ~>> (i, n) =
-   if Word.< (n, sizeInBitsWord)
-      then W.~>>? (i, Primitive.Word32.zextdFromWord n)
-      else W.~>>? (i, Primitive.Word32.- (W.sizeInBitsWord, 0w1))
-
-
-
-fun rol (i, n) = W.rolUnsafe (i, Primitive.Word32.zextdFromWord n)
-fun ror (i, n) = W.rorUnsafe (i, Primitive.Word32.zextdFromWord n)
-*)
-
-
-
 end
 
+(*
 structure WordSimd8x16 = WordSimd (
     structure WS = Primitive.WordSimd8x16
     structure W = Word8 
@@ -78,14 +53,18 @@ structure WordSimd16x8 = WordSimd (
     structure WS = Primitive.WordSimd16x8
     structure W = Word16 
 ) 
+*)
 
 structure WordSimd32x4 = WordSimd (
     structure WS = Primitive.WordSimd32x4
     structure W = Word32 
 ) 
 
+(*
+
 structure WordSimd64x2 = WordSimd (
     structure WS = Primitive.WordSimd64x2
     structure W = Word64 
 ) 
+*)
 

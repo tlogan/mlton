@@ -1083,6 +1083,8 @@ structure TupleRep =
          let
             val objptrs = ref []
             val numObjptrs = ref 0
+            val word128s = ref []
+            val numWord128s = ref 0
             val word64s = ref []
             val numWord64s = ref 0
             val word32s = ref []
@@ -1116,6 +1118,7 @@ structure TupleRep =
                              | 16 => addSubword32 b
                              | 32 => addDirect (word32s, numWord32s)
                              | 64 => addDirect (word64s, numWord64s)
+                             | 128 => addDirect (word128s, numWord128s)
                              | _ => (addSubword32 b
                                      ; hasNonPrim := true)
                          end
@@ -1124,7 +1127,7 @@ structure TupleRep =
             val selects = Array.array (Vector.length rs, Select.None)
             val hasNonPrim = !hasNonPrim
             val numComponents =
-               !numObjptrs + !numWord64s + !numWord32s +
+               !numObjptrs + !numWord128s + !numWord64s + !numWord32s +
                (let
                    val widthSubword32s = !widthSubword32s
                 in
@@ -1160,6 +1163,8 @@ structure TupleRep =
                  end))
             val offset = Bytes.zero
             val components = []
+            val (offset, components) =
+               simple (!word128s, Bytes.inWord128, offset, components)
             val (offset, components) =
                simple (!word64s, Bytes.inWord64, offset, components)
             val (offset, components) =
